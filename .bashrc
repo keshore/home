@@ -21,8 +21,36 @@ which helm >/dev/null 2>&1 && {
     source $HOME/.kube/helm_completion.sh
 }
 
+which git >/dev/null 2>&1 && {
+    [ ! -f $HOME/.git-completion.bash ] && curl -o $HOME/.git-completion.bash https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
+    source $HOME/.git-completion.bash
+}
+
 function parse_git_branch() {
     git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+function cd() {
+    builtin cd "$@" || return
+    if [ -n "$VIRTUAL_ENV" ]; then
+        deactivate 2>/dev/null
+    fi
+    
+    if [ -f requirements.txt ]; then
+        echo "Switching to Python virtual environment..."
+        if [ -f .venv/bin/activate ] ;then
+            source .venv/bin/activate
+        else
+            echo "Creating virtual environment..."
+            python3 -m venv .venv
+        fi
+        source .venv/bin/activate
+    fi
+
+    if [ -f .env ] ; then
+        echo "Loading environment variables from .env file..."
+        source .env
+    fi
 }
 
 cat<<-EOF
